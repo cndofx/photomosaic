@@ -1,11 +1,7 @@
-use image::{io::Reader as ImageReader, DynamicImage, GenericImageView, Rgb, RgbImage};
+use image::{io::Reader as ImageReader, Rgb, RgbImage};
 use rayon::prelude::*;
 
-use photomosaic::{
-    average_image_color,
-    cells::{Cells, CELL_SIZE},
-    get_file_paths,
-};
+use photomosaic::{average_image_color, cells::Cells, get_file_paths, image_record::ImageRecord};
 
 fn main() {
     let mut img = ImageReader::open("img/input.png")
@@ -33,9 +29,21 @@ fn main() {
     // ========================
 
     let files = get_file_paths("img/sources/cropped/");
-    files.par_iter().for_each(|file| {
-        let img = ImageReader::open(file).unwrap().decode().unwrap();
+    // files.into_par_iter().for_each(|file| {
+    //     let img = ImageReader::open(&file).unwrap().decode().unwrap();
+    //     let color = average_image_color(&img);
+    //     println!(
+    //         "file: {:?}\naverage image color: {:?}\n",
+    //         &file.file_name().unwrap(),
+    //         color
+    //     );
+    // });
+
+    let records: Vec<ImageRecord> = files.into_par_iter().map(|path| {
+        let img = ImageReader::open(&path).unwrap().decode().unwrap();
         let color = average_image_color(&img);
-        println!("file: {:?}\naverage image color: {:?}\n", file.file_name(), color);
-    });
+        ImageRecord::new(path, color)
+    }).collect();
+
+    dbg!(&records);
 }

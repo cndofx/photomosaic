@@ -5,6 +5,7 @@ use image::{DynamicImage, GenericImageView};
 use cells::CELL_SIZE;
 
 pub mod cells;
+pub mod image_record;
 
 pub fn get_file_paths(dir: impl AsRef<Path>) -> Vec<PathBuf> {
     let mut paths = Vec::new();
