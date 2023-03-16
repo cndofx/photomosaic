@@ -1,4 +1,4 @@
-use image::{io::Reader as ImageReader, GenericImageView, Rgb};
+use image::{io::Reader as ImageReader, GenericImageView, Rgb, RgbImage};
 
 const CELL_SIZE: u32 = 50;
 
@@ -18,7 +18,7 @@ fn main() {
     dbg!(cropped_width, cropped_height);
 
     let new_image = img.crop(0, 0, cropped_width, cropped_height);
-    new_image.save("img/output.png").unwrap();
+    // new_image.save("img/output.png").unwrap();
 
     // get number of cells in the image
     let cells_x_count = cropped_width / CELL_SIZE;
@@ -51,5 +51,18 @@ fn main() {
         cell.2 /= pixels_per_cell;
     }
 
-    dbg!(cell_colors);
+    // convert colors back into an image
+    let mut pixelated_image = RgbImage::new(cells_x_count, cells_y_count);
+    for (i, color) in cell_colors.iter().enumerate() {
+        let i = i as u32;
+        let x = i % cells_x_count;
+        let y = i / cells_x_count;
+
+        let r = color.0 as u8;
+        let g = color.1 as u8;
+        let b = color.2 as u8;
+
+        pixelated_image.put_pixel(x, y, Rgb([r, g, b]))
+    }
+    pixelated_image.save("img/output.png").unwrap();
 }
