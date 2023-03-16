@@ -1,6 +1,11 @@
-use image::{io::Reader as ImageReader, GenericImageView, Rgb, RgbImage, DynamicImage};
+use image::{io::Reader as ImageReader, DynamicImage, GenericImageView, Rgb, RgbImage};
+use rayon::prelude::*;
 
-use photomosaic::cells::{CELL_SIZE, Cells};
+use photomosaic::{
+    average_image_color,
+    cells::{Cells, CELL_SIZE},
+    get_file_paths,
+};
 
 fn main() {
     let mut img = ImageReader::open("img/input.png")
@@ -24,5 +29,13 @@ fn main() {
         pixelated_image.put_pixel(x, y, Rgb([r, g, b]))
     }
     pixelated_image.save("img/output.png").unwrap();
-}
 
+    // ========================
+
+    let files = get_file_paths("img/sources/cropped/");
+    files.par_iter().for_each(|file| {
+        let img = ImageReader::open(file).unwrap().decode().unwrap();
+        let color = average_image_color(&img);
+        println!("file: {:?}\naverage image color: {:?}\n", file.file_name(), color);
+    });
+}
