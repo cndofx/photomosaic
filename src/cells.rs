@@ -1,8 +1,9 @@
 use image::{DynamicImage, GenericImageView};
+use rayon::prelude::IntoParallelRefIterator;
 
 use crate::crop_image;
 
-pub const CELL_SIZE: u32 = 10;
+pub const CELL_SIZE: u32 = 5;
 
 #[derive(Debug, Clone)]
 pub struct Cells {
@@ -71,5 +72,9 @@ impl Cells {
 
     pub fn iter(&self) -> std::slice::Iter<'_, (u64, u64, u64)> {
         self.cells.iter()
+    }
+
+    pub fn par_iter(&self) -> rayon::slice::Iter<'_, (u64, u64, u64)> {
+        self.cells.par_iter()
     }
 }

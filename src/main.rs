@@ -1,3 +1,7 @@
+// use std::sync::{Mutex, Arc};
+use std::sync::Arc;
+use parking_lot::Mutex;
+
 use image::{io::Reader as ImageReader, Rgb, RgbImage, RgbaImage, DynamicImage};
 use rayon::prelude::*;
 
@@ -7,7 +11,7 @@ use photomosaic::{average_image_color, cells::Cells, get_file_paths, image_recor
 const OUTPUT_CELL_SIZE: u32 = 100;
 
 fn main() {
-    let mut img = ImageReader::open("img/input.png")
+    let mut img = ImageReader::open("img/input22.png")
         .unwrap()
         .decode()
         .unwrap();
@@ -41,7 +45,8 @@ fn main() {
 
     dbg!(&records);
 
-    let result = cells_to_image(&cells, &records);
+    // let result = cells_to_image(&cells, &records);
+    let result = cells_to_image_parallel(&cells, &records);
     result.save("img/output.png").unwrap();
 }
 
@@ -67,4 +72,27 @@ fn cells_to_image(cells: &Cells, images: &[ImageRecord]) -> DynamicImage {
     }
 
     image.into()
+}
+
+fn cells_to_image_parallel(cells: &Cells, images: &[ImageRecord]) -> DynamicImage {
+    let image = Arc::new(Mutex::new(RgbaImage::new(cells.width() * OUTPUT_CELL_SIZE, cells.height() * OUTPUT_CELL_SIZE)));
+
+    cells.par_iter().enumerate().for_each(|(i, color)| {
+        let r = color.0 as u8;
+        let b = color.1 as u8;
+        let g = color.2 as u8;
+        let closest_match = images.iter().min_by_key(|image| image.color_distance((r, g, b))).unwrap();
+        println!("color {}: {:?}", i, color);
+        println!("closest color match: {:?} ({:?})", closest_match.path(), closest_match.color());
+
+        let closest = ImageReader::open(closest_match.path()).unwrap().decode().unwrap();
+        let closest = closest.resize_exact(OUTPUT_CELL_SIZE, OUTPUT_CELL_SIZE, image::imageops::FilterType::Triangle);
+
+        let (x, y) = cells.index_to_coordinate(i);
+        let x = x * OUTPUT_CELL_SIZE;
+        let y = y * OUTPUT_CELL_SIZE;
+        image::imageops::replace(&mut *image.lock(), &closest, x as i64, y as i64);
+    });
+
+    Arc::try_unwrap(image).unwrap().into_inner().into()
 }
