@@ -49,10 +49,15 @@ fn main() {
         out_path.push(new_filename);
         out_path.set_extension("png");
 
-        // crop the image into a square
-        let mut image = ImageReader::open(path).unwrap().decode().unwrap();
-        let new_image = square_image(&mut image);
-        new_image.save(out_path).unwrap();
+        match ImageReader::open(&path).unwrap().decode() {
+            Ok(mut image) => {
+                let new_image = square_image(&mut image);
+                new_image.save(out_path).unwrap();
+            }
+            Err(e) => {
+                eprintln!("Skipping {:?} due to error: {}", &path, e);
+            }
+        }
     }
 }
 
