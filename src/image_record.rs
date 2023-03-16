@@ -29,6 +29,6 @@ impl ImageRecord {
         let r2 = other.0 as f32;
         let g2 = other.1 as f32;
         let b2 = other.2 as f32;
-        ((r1 - r2) + (g1 - g2) + (b1 - b2)).sqrt() as u32
+        ((r1 - r2).powi(2) + (g1 - g2).powi(2) + (b1 - b2).powi(2)).sqrt() as u32
     }
 }

@@ -2,7 +2,7 @@ use image::{DynamicImage, GenericImageView};
 
 use crate::crop_image;
 
-pub const CELL_SIZE: u32 = 50;
+pub const CELL_SIZE: u32 = 10;
 
 #[derive(Debug, Clone)]
 pub struct Cells {
@@ -63,6 +63,10 @@ impl Cells {
     /// The total number of cells in the array
     pub fn count(&self) -> u32 {
         self.count_x * self.count_y
+    }
+
+    pub fn index_to_coordinate(&self, index: usize) -> (u32, u32) {
+        (index as u32 % self.count_x, index as u32 / self.count_x)
     }
 
     pub fn iter(&self) -> std::slice::Iter<'_, (u64, u64, u64)> {
