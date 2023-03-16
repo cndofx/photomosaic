@@ -1,7 +1,9 @@
 use std::{fs::read_dir, path::PathBuf};
 
 use clap::Parser;
-use image::{io::Reader as ImageReader, DynamicImage};
+use image::io::Reader as ImageReader;
+use image::DynamicImage;
+use rayon::prelude::*;
 
 #[derive(Parser)]
 struct Cli {
@@ -14,7 +16,9 @@ struct Cli {
 
 fn main() {
     let cli = Cli::parse();
-    let output_directory = cli.output_directory.unwrap_or_else(|| cli.source_directory.clone());
+    let output_directory = cli
+        .output_directory
+        .unwrap_or_else(|| cli.source_directory.clone());
     std::fs::create_dir_all(&output_directory).unwrap();
 
     // get paths to all files in the source directory
@@ -34,31 +38,41 @@ fn main() {
     }
 
     // crop all files in the list
-    for path in paths.iter() {
-        if path.file_name().unwrap().to_str().unwrap().contains("_cropped") {
-            eprintln!("{:?} is already cropped, skipping", path.file_name().unwrap());
-            continue;
-        }
+    // for path in paths.par_iter() {
+    paths.par_iter().for_each(|path| {
+        if path
+            .file_name()
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .contains("_cropped")
+        {
+            eprintln!(
+                "{:?} is already cropped, skipping",
+                path.file_name().unwrap()
+            );
+        } else {
+            // get path to write new image to
+            let filename = path.file_stem().unwrap();
+            let mut new_filename = filename.to_owned();
+            new_filename.push("_cropped");
 
-        // get path to write new image to
-        let filename = path.file_stem().unwrap();
-        let mut new_filename = filename.to_owned();
-        new_filename.push("_cropped");
+            let mut out_path = output_directory.clone();
+            out_path.push(new_filename);
+            out_path.set_extension("png");
 
-        let mut out_path = output_directory.clone();
-        out_path.push(new_filename);
-        out_path.set_extension("png");
-
-        match ImageReader::open(&path).unwrap().decode() {
-            Ok(mut image) => {
-                let new_image = square_image(&mut image);
-                new_image.save(out_path).unwrap();
+            // crop image into a square
+            match ImageReader::open(&path).unwrap().decode() {
+                Ok(mut image) => {
+                    let new_image = square_image(&mut image);
+                    new_image.save(out_path).unwrap();
+                }
+                Err(e) => {
+                    eprintln!("Skipping {:?} due to error: {}", &path, e);
+                }
             }
-            Err(e) => {
-                eprintln!("Skipping {:?} due to error: {}", &path, e);
-            }
         }
-    }
+    });
 }
 
 fn square_image(image: &mut DynamicImage) -> DynamicImage {
