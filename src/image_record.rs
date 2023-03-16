@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{PathBuf, Path};
 
 #[derive(Debug, Clone)]
 pub struct ImageRecord {
@@ -18,13 +18,17 @@ impl ImageRecord {
         self.average_color
     }
 
-    pub fn color_distance(&self, other: (u8, u8, u8)) -> f32 {
+    pub fn path(&self) -> &Path {
+        &self.path
+    }
+
+    pub fn color_distance(&self, other: (u8, u8, u8)) -> u32 {
         let r1 = self.average_color.0 as f32;
         let g1 = self.average_color.1 as f32;
         let b1 = self.average_color.2 as f32;
         let r2 = other.0 as f32;
         let g2 = other.1 as f32;
         let b2 = other.2 as f32;
-        ((r1 - r2) + (g1 - g2) + (b1 - b2)).sqrt()
+        ((r1 - r2) + (g1 - g2) + (b1 - b2)).sqrt() as u32
     }
 }

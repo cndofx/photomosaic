@@ -2,7 +2,7 @@ use image::{DynamicImage, GenericImageView};
 
 use crate::crop_image;
 
-pub const CELL_SIZE: u32 = 20;
+pub const CELL_SIZE: u32 = 50;
 
 #[derive(Debug, Clone)]
 pub struct Cells {

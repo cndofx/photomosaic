@@ -46,4 +46,13 @@ fn main() {
     }).collect();
 
     dbg!(&records);
+
+    for (i, color) in cells.iter().enumerate() {
+        println!("color {}: {:?}", i, color);
+        let r = color.0 as u8;
+        let b = color.1 as u8;
+        let g = color.2 as u8;
+        let closest_match = records.iter().min_by_key(|record| record.color_distance((r, g, b))).unwrap();
+        println!("closest color match: {:?}\n", closest_match.path());
+    }
 }
